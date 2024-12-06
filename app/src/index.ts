@@ -4,41 +4,6 @@ import Web3, { Contract, ContractAbi, EventLog } from 'web3';
 import { readFileSync } from 'fs';
 import { RegisteredSubscription } from 'web3/lib/commonjs/eth.exports';
 
-
-async function getStorageDataAtBlock(chosenBlock: number, contractAddress: string, index: number, web3: Web3<RegisteredSubscription>) {
-    const storageVal = await web3.eth.getStorageAt(contractAddress, index, chosenBlock);
-
-    const storageData = new StorageData({
-        block_num: chosenBlock,
-        address: contractAddress,
-        slot: "0x0000000000000000000000000000000000000000000000000000000000000000",
-        value: storageVal
-    })
-    console.log(chosenBlock, storageVal)
-
-    return storageData
-}
-
-
-
-// Get N storage values
-async function getStorageDataPoints(numDataPoints: number, startingBlock: number, contractAddress: string, index: number, web3: Web3<RegisteredSubscription>) {
-    var dataPoints = []
-
-    var curBlock = startingBlock;
-
-    // repeat until we meet the requested data points
-    while (dataPoints.length < numDataPoints) {
-        // fetch brevis structured data
-        const storageItem = await getStorageDataAtBlock(curBlock, contractAddress, index, web3);
-        // append new item
-        dataPoints.push(storageItem)
-        // move to next block
-        curBlock--;
-    }
-
-    return dataPoints;
-}
 async function main() {
     const web3 = new Web3('https://eth.llamarpc.com');
     const prover = new Prover('localhost:33247');
@@ -61,31 +26,36 @@ async function main() {
         return
     }
 
-    // proofReq.addReceipt(
-    //     new ReceiptData({
-    //         tx_hash: hash,
-    //         fields: [
-    //             new Field({
-    //                 log_pos: 0,
-    //                 is_topic: true,
-    //                 field_index: 1,
-    //             }),
-    //             new Field({
-    //                 log_pos: 0,
-    //                 is_topic: false,
-    //                 field_index: 0,
-    //             }),
-    //         ],
-    //     }),
-    // );
-
+    proofReq.addReceipt(
+        new ReceiptData({
+            tx_hash: hash,
+            fields: [
+                new Field({
+                    log_pos: 1,
+                    is_topic: false,
+                    field_index: 2,
+                }),
+            ],
+        }),
+    );
+    proofReq.addReceipt(
+        new ReceiptData({
+            tx_hash: hash,
+            fields: [
+                new Field({
+                    log_pos: 2,
+                    is_topic: true,
+                    field_index: 1,
+                }),
+                new Field({
+                    log_pos: 2,
+                    is_topic: false,
+                    field_index: 0,
+                }),
+            ],
+        }),
+    );
     console.log(`Send prove request for ${hash}`)
-
-    const storageDataList = await getStorageDataPoints(500, 19308799, "0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640", 0, web3)
-
-    for (let i = 0; i < storageDataList.length; i++) {
-        proofReq.addStorage(storageDataList[i], i)
-    }
 
     const proofRes = await prover.prove(proofReq);
     // error handling
