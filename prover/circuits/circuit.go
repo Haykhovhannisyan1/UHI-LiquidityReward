@@ -17,9 +17,8 @@ var minimumLiqudity = sdk.ConstUint248(5000000000) // minimum 5000 USDC
 var _ sdk.AppCircuit = &AppCircuit{}
 
 func (c *AppCircuit) Allocate() (maxReceipts, maxStorage, maxTransactions int) {
-	// Our app is only ever going to use one storage data at a time so
-	// we can simply limit the max number of data for storage to 1 and
-	// 0 for all others
+	// We are going to use 2 receipts one to check that USDC transfer happened 
+	// and another one to check that ModifyLiquidity was called.
 	return 64, 0, 0
 }
 
@@ -28,25 +27,37 @@ func (c *AppCircuit) Define(api *sdk.CircuitAPI, in sdk.DataInput) error {
 	receipt0 := sdk.GetUnderlying(receipts, 0)
 	receipt1 := sdk.GetUnderlying(receipts, 1)
 
+	// Verify that the event occurred on the PositionManager contract
 	api.Uint248.AssertIsEqual(receipt0.Fields[0].Contract, PositionManager)
+	// Ensure that the Amount is part of the data section, not a topic
 	api.Uint248.AssertIsEqual(receipt0.Fields[0].IsTopic, sdk.ConstUint248(0))
+	// Confirm that the Index of the field is 2
 	api.Uint248.AssertIsEqual(receipt0.Fields[0].Index, sdk.ConstUint248(2))
+	// Validate that the Event corresponds to the ModifyLiquidity event
 	api.Uint248.AssertIsEqual(receipt0.Fields[0].EventID, EventIdLiquidity)
-	// Make sure this transfer has minimum 500 USDC volume
-	api.Uint248.AssertIsLessOrEqual(minimumLiqudity, api.ToUint248(receipt0.Fields[1].Value))
+	//Check that the Amount is at least 5000 USDC
+	api.Uint248.AssertIsLessOrEqual(minimumLiqudity, api.ToUint248(receipt0.Fields[0].Value))
 
-
+	// Verify that the event occurred on the USDC contract
 	api.Uint248.AssertIsEqual(receipt1.Fields[0].Contract, USDCTokenAddr)
+	// Ensure that the Sender is part of the topic section.
 	api.Uint248.AssertIsEqual(receipt1.Fields[0].IsTopic, sdk.ConstUint248(1))
+	// Confirm that the Index of the field is 1
 	api.Uint248.AssertIsEqual(receipt1.Fields[0].Index, sdk.ConstUint248(1))
+	// Validate that the Event corresponds to the Transfer event
 	api.Uint248.AssertIsEqual(receipt1.Fields[0].EventID, EventIdTransfer)
-	// Make sure two fields uses the same log to make sure account address linking with correct volume
-	api.Uint32.AssertIsEqual(receipt1.Fields[0].LogPos, receipt1.Fields[1].LogPos)
 
+	// Ensure that the Amount is part of the data section, not a topic
 	api.Uint248.AssertIsEqual(receipt1.Fields[1].IsTopic, sdk.ConstUint248(0))
+	// Confirm that the Index of the field is 0
 	api.Uint248.AssertIsEqual(receipt1.Fields[1].Index, sdk.ConstUint248(0))
+	// Check that the Amount is the same as the Amount in the ModifyLiquidity Event 
 	api.Bytes32.AssertIsEqual(receipt0.Fields[0].Value, receipt1.Fields[1].Value)//TODO
 
+	// Make sure that the Sender and the Amount are from the same event(have the same log)
+	api.Uint32.AssertIsEqual(receipt1.Fields[0].LogPos, receipt1.Fields[1].LogPos)
+
+	// Returns the blocknumber, the LP's address(Sender) and the amount of Added Liqudity
 	api.OutputUint(64, api.ToUint248(receipt0.BlockNum))
 	api.OutputAddress(api.ToUint248(receipt1.Fields[0].Value))
 	api.OutputBytes32(receipt0.Fields[1].Value)

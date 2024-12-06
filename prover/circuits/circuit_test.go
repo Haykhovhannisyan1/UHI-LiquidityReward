@@ -21,6 +21,16 @@ func TestCircuit(t *testing.T) {
 		TxHash: txHash,
 		Fields: []sdk.LogFieldData{
 			{
+				IsTopic:    false,
+				LogPos:     0,
+				FieldIndex: 2,
+			},
+		},
+	})
+	app.AddReceipt(sdk.ReceiptData{
+		TxHash: txHash,
+		Fields: []sdk.LogFieldData{
+			{
 				IsTopic:    true,
 				LogPos:     0,
 				FieldIndex: 1,
