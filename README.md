@@ -29,13 +29,9 @@ The Node.js project in ./app is a simple program that does the following things:
 cd app
 npm run start [TransactionHash]
 ```
-Example for Normal Flow
-```bash
-npm run start 0x8a7fc50330533cd0adbf71e1cfb51b1b6bbe2170b4ce65c02678cf08c8b17737
-```
 # [Contracts](./contracts)
 
-The app contract [TokenTransferZkOnly.sol](./contracts/contracts/TokenTransferZkOnly.sol) is called
+The app contract [AddLiquidityZkOnly.sol] is called
 after you submit proof is submitted to Brevis when Brevis'
 systems submit the final proof on-chain.
 It does the following things when handling the callback:
