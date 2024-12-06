@@ -11,18 +11,18 @@ import (
 func TestCircuit(t *testing.T) {
 	rpc := "RPC_URL"
 	localDir := "$HOME/circuitOut/myBrevisApp"
-	app, err := sdk.NewBrevisApp(1, rpc, localDir)
+	app, err := sdk.NewBrevisApp(11155111, rpc, localDir)
 	check(err)
 
 	txHash := common.HexToHash(
-		"0x8a7fc50330533cd0adbf71e1cfb51b1b6bbe2170b4ce65c02678cf08c8b17737")
+		"0xb1481048a3f3b09c234049c2653ed825444a5f628f9c087e518558478e398d92")
 
 	app.AddReceipt(sdk.ReceiptData{
 		TxHash: txHash,
 		Fields: []sdk.LogFieldData{
 			{
 				IsTopic:    false,
-				LogPos:     0,
+				LogPos:     1,
 				FieldIndex: 2,
 			},
 		},
@@ -32,12 +32,12 @@ func TestCircuit(t *testing.T) {
 		Fields: []sdk.LogFieldData{
 			{
 				IsTopic:    true,
-				LogPos:     0,
+				LogPos:     2,
 				FieldIndex: 1,
 			},
 			{
 				IsTopic:    false,
-				LogPos:     0,
+				LogPos:     2,
 				FieldIndex: 0,
 			},
 		},
