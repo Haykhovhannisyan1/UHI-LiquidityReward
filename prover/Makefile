@@ -1,5 +1,5 @@
 install:
-	go build -o $(HOME)/go/bin/prover ./main.go
+	go build -o $(HOME)/go/bin/prover ./cmd/main.go
 
 config:
 	# create log files
